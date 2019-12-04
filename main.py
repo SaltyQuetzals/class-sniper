@@ -11,13 +11,13 @@ HOME_URL = "https://compassxe-ssb.tamu.edu/StudentRegistrationSsb/ssb/registrati
 
 POST_TERM_CODE_URL = "https://compassxe-ssb.tamu.edu/StudentRegistrationSsb/ssb/term/search?mode=courseSearch"
 
-GET_SECTION_INFO_URL = "https://compassxe-ssb.tamu.edu/StudentRegistrationSsb/ssb/searchResults/searchResults?txt_subjectcoursecombo={}&txt_term=201931&pageOffset=0&pageMaxSize=500&sortColumn=subjectDescription&sortDirection=asc"
+GET_SECTION_INFO_URL = "https://compassxe-ssb.tamu.edu/StudentRegistrationSsb/ssb/searchResults/searchResults?txt_subjectcoursecombo={}&txt_term={}&pageOffset=0&pageMaxSize=500&sortColumn=subjectDescription&sortDirection=asc"
 
 
 def send_email(
     from_email: str, from_pass: str, to_email: str, subj: str, body: str
 ) -> None:
-    server = smtplib.SMTP("smtp.gmail.com", "587")
+    server = smtplib.SMTP("smtp.gmail.com", 587)
     server.ehlo()
     server.starttls()
     server.login(from_email, from_pass)
@@ -37,7 +37,7 @@ def get_sections_for(dept: str, course_num: str, term_code: str):
     cookies = r.cookies
 
     r: requests.Response = requests.get(
-        GET_SECTION_INFO_URL.format(dept + "" + course_num), cookies=cookies
+        GET_SECTION_INFO_URL.format(dept + "" + course_num, term_code), cookies=cookies
     )
     json_data = json.loads(r.content)
     return json_data["data"]
@@ -88,14 +88,11 @@ def main(args):
                 if (
                     section["courseReferenceNumber"] in crns
                     and section["seatsAvailable"] > 0
-                    # True
                 ):
                     print(section["courseReferenceNumber"])
-                    # notify_of_availability(
-                    #     section, args.src_email, args.src_pass, args.dest_email
-                    # )
-            # break
-        # print(chr(27) + "[2J")
+                    notify_of_availability(
+                        section, args.src_email, args.src_pass, args.dest_email
+                    )
         time.sleep(5)
 
 
@@ -107,9 +104,7 @@ if __name__ == "__main__":
         help="The Gmail address to send the email from. MAKE SURE LESS-SECURE APPS CAN ACCESS THIS EMAIL.",
     )
     parser.add_argument(
-        dest="src_pass",
-        type=str,
-        help="The password to provide along wih src_email",
+        dest="src_pass", type=str, help="The password to provide along wih src_email",
     )
     parser.add_argument(
         dest="term_code",
